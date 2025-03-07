@@ -99,3 +99,13 @@ if __name__ == "__main__":
     print(f"{action} des en-têtes dans {target_dir}...")
     process_directory(target_dir, remove_mode)
     print("Terminé!")
+
+
+    # Utilisation du script :
+
+# Ajouter des en-têtes dans un dossier spécifique :
+# python add_headers.py chemin/vers/dossier
+# Supprimer les en-têtes :
+# python add_headers.py remove chemin/vers/dossier
+# Utiliser le dossier courant :
+# python add_headers.py
