@@ -37,3 +37,5 @@ function checkEnvVariables() {
 }
 
 module.exports = checkEnvVariables
+
+// Path: store-storefront/next-sitemap.js

@@ -4,6 +4,25 @@ import re
 import sys
 from datetime import datetime
 
+# Dossiers et fichiers à exclure par défaut
+EXCLUDED_DIRS = {'node_modules', '.git', 'dist', 'build'}
+EXCLUDED_FILES = {'.DS_Store', 'Thumbs.db', '*.pyc', '*.pyo', '*.pyd', '*.so'}
+
+def should_process_path(path):
+    """Vérifie si le chemin doit être traité ou ignoré."""
+    # Vérifie si le chemin contient un dossier exclu
+    for excluded_dir in EXCLUDED_DIRS:
+        if excluded_dir in path.split(os.sep):
+            return False
+            
+    # Vérifie si le fichier correspond à un pattern exclu
+    filename = os.path.basename(path)
+    for excluded_pattern in EXCLUDED_FILES:
+        if re.match(excluded_pattern.replace('*', '.*'), filename):
+            return False
+            
+    return True
+
 def get_file_header(file_ext, filename):
     """Génère l'en-tête de commentaire court sur une ligne."""
     date = datetime.now().strftime("%d/%m/%Y")
@@ -29,6 +48,9 @@ def remove_header(content, file_ext):
 
 def process_file(filepath, remove=False):
     """Traite un fichier en ajoutant ou supprimant l'en-tête selon le mode."""
+    if not should_process_path(filepath):
+        return
+
     _, ext = os.path.splitext(filepath)
     filename = os.path.basename(filepath)
     
@@ -60,18 +82,24 @@ def process_file(filepath, remove=False):
     except Exception as e:
         print(f"Erreur lors du traitement de {filename}: {str(e)}")
 
-def process_directory(directory, remove=False):
-    """Parcourt récursivement le répertoire pour traiter les fichiers."""
-    for root, _, files in os.walk(directory):
-        for file in files:
-            filepath = os.path.join(root, file)
-            process_file(filepath, remove)
+def process_path(path, remove=False):
+    """Traite un chemin qui peut être un fichier ou un dossier."""
+    if os.path.isfile(path):
+        process_file(path, remove)
+    elif os.path.isdir(path):
+        for root, _, files in os.walk(path):
+            for file in files:
+                filepath = os.path.join(root, file)
+                process_file(filepath, remove)
 
 def print_usage():
     print("Usage:")
-    print("  Pour ajouter des en-têtes:    python add_headers.py [chemin_dossier]")
-    print("  Pour supprimer les en-têtes:  python add_headers.py remove [chemin_dossier]")
-    print("\nSi le chemin du dossier n'est pas spécifié, le dossier courant sera utilisé.")
+    print("  Pour ajouter des en-têtes:")
+    print("    python add_headers.py chemin1 [chemin2 ...]")
+    print("    Exemple: python add_headers.py store/src store-storefront/src store/package.json")
+    print("\n  Pour supprimer les en-têtes:")
+    print("    python add_headers.py remove chemin1 [chemin2 ...]")
+    print("\nNote: Les dossiers node_modules, .git, dist, build sont exclus automatiquement")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1].lower() == "help":
@@ -80,32 +108,51 @@ if __name__ == "__main__":
         
     # Détermine si nous sommes en mode suppression
     remove_mode = False
-    target_dir = "."
+    paths = []
     
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == "remove":
             remove_mode = True
-            if len(sys.argv) > 2:
-                target_dir = sys.argv[2]
+            paths = sys.argv[2:]
         else:
-            target_dir = sys.argv[1]
+            paths = sys.argv[1:]
     
-    # Vérifie si le dossier existe
-    if not os.path.exists(target_dir):
-        print(f"Le répertoire {target_dir} n'existe pas!")
+    if not paths:
+        print("Erreur: Aucun chemin spécifié!")
+        print_usage()
+        sys.exit(1)
+    
+    # Vérifie si les chemins existent
+    invalid_paths = [p for p in paths if not os.path.exists(p)]
+    if invalid_paths:
+        print("Erreur: Les chemins suivants n'existent pas:")
+        for p in invalid_paths:
+            print(f"  - {p}")
         sys.exit(1)
         
     action = "Suppression" if remove_mode else "Ajout"
-    print(f"{action} des en-têtes dans {target_dir}...")
-    process_directory(target_dir, remove_mode)
-    print("Terminé!")
+    print(f"{action} des en-têtes...")
+    
+    for path in paths:
+        print(f"\nTraitement de {path}...")
+        process_path(path, remove_mode)
+    
+    print("\nTerminé!")
 
-
-    # Utilisation du script :
+        # Utilisation du script :
 
 # Ajouter des en-têtes dans un dossier spécifique :
-# python add_headers.py chemin/vers/dossier
+# python python .\add_headers.py store\src
 # Supprimer les en-têtes :
-# python add_headers.py remove chemin/vers/dossier
+# python add_headers.py remove store\src store-storefront\src
 # Utiliser le dossier courant :
 # python add_headers.py
+
+
+# python .\add_headers.py store\src store-storefront\src store\.medusa store\prisma\schema.prisma store\src store\static store\instrumentation.ts store\medusa-config.ts store\package.json store\tsconfig.json store-storefront\.prettierrc store-storefront\.eslintrc.js store-storefront\check-env-variables.js store-storefront\next-env.d.ts store-storefront\next-sitemap.js store-storefront\next.config.js store-storefront\package.json store-storefront\postcss.config.js store-storefront\tailwind.config.js store-storefront\tsconfig.json
+
+
+
+
+
+# python .\add_headers.py remove store\src store-storefront\src store\.medusa store\prisma\schema.prisma store\src store\static store\instrumentation.ts store\medusa-config.ts store\package.json store\tsconfig.json store-storefront\.prettierrc store-storefront\.eslintrc.js store-storefront\check-env-variables.js store-storefront\next-env.d.ts store-storefront\next-sitemap.js store-storefront\next.config.js store-storefront\package.json store-storefront\postcss.config.js store-storefront\tailwind.config.js store-storefront\tsconfig.json
