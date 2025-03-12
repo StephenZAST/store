@@ -1,7 +1,25 @@
-import { ConfigModule } from '@medusajs/medusa'
-import { DataSource } from 'typeorm'
+const dotenv = require('dotenv')
 
-const config: ConfigModule = {
+let ENV_FILE_NAME = '';
+switch (process.env.NODE_ENV) {
+  case 'production':
+    ENV_FILE_NAME = '.env.production';
+    break;
+  case 'staging':
+    ENV_FILE_NAME = '.env.staging';
+    break;
+  case 'test':
+    ENV_FILE_NAME = '.env.test';
+    break;
+  case 'development':
+  default:
+    ENV_FILE_NAME = '.env';
+    break;
+}
+
+dotenv.config({ path: process.cwd() + '/' + ENV_FILE_NAME });
+
+const config = {
   projectConfig: {
     database_type: "postgres",
     database_url: process.env.DATABASE_URL,
@@ -12,7 +30,6 @@ const config: ConfigModule = {
     jwt_secret: process.env.JWT_SECRET,
     cookie_secret: process.env.COOKIE_SECRET
   },
-  featureFlags: {},
   modules: {
     eventBus: {
       resolve: "@medusajs/event-bus-local"
@@ -31,4 +48,4 @@ const config: ConfigModule = {
   ]
 }
 
-export default config
+module.exports = config
