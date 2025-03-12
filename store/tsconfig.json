@@ -17,7 +17,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "checkJs": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": ["node", "wrap-ansi"]
   },
   "ts-node": {
     "swc": true
@@ -33,4 +34,3 @@
     ".cache"
   ]
 }
- 

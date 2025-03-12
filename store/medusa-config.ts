@@ -12,6 +12,18 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
-  }
+  },
+  plugins: [
+    {
+      resolve: `medusa-payment-manual`,
+      options: {
+        payment_description: "Paiement à la livraison",
+        payment_status_types: {
+          pending: "En attente de livraison",
+          captured: "Paiement reçu", 
+          canceled: "Paiement annulé"
+        }
+      }
+    }
+  ]
 })
- 
